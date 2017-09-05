@@ -8,6 +8,7 @@
 var fs = require('fs');
 var express = require('express');
 var app = express();
+var monthList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 if (!process.env.DISABLE_XORIGIN) {
   app.use(function(req, res, next) {
@@ -32,11 +33,67 @@ app.route('/_api/package.json')
       res.type('txt').send(data.toString());
     });
   });
-  
+ 
 app.route('/')
     .get(function(req, res) {
 		  res.sendFile(process.cwd() + '/views/index.html');
     })
+
+var timestampData = null;
+/** Show paramater capture **/
+app.get('/:name',function(req, res) {
+var timestampData = (req.params.name);
+
+/************* evaluate **************/
+  function unixToDate() {
+  var timestampDate = Number(new Date(timestampData * 1000));
+  return timestampDate;
+} 
+var unixToDate = unixToDate();
+
+  function dateToUnix() {
+ var dateTime = new Date(timestampData); // need to check if input is date
+  if (!isNaN(dateTime)) {  
+ var timestamp = Math.floor(dateTime / 1000);
+  } else {
+    timestamp = null; 
+  }
+ return timestamp;
+}
+var dateToUnix = dateToUnix();  
+ 
+function unixNumberToDate() {
+  if (!isNaN(timestampData)) {  
+  var newDate = new Date(timestampData * 1000);
+   } else {
+     newDate = null;
+   }
+   if (newDate) {
+   var enteredDay = newDate.getDate();
+   var enteredMonth = newDate.getMonth();
+   var enteredYear = newDate.getFullYear();  
+   var unixDate = monthList[enteredMonth] + " " + enteredDay + ", " + enteredYear;
+   } else {
+   var enteredDay = null;  
+   }
+   return unixDate;
+ }
+ var unixNumberToDate = unixNumberToDate();
+ 
+  /** validate **/
+  if (unixToDate) {
+    console.log("one=", timestampData)
+   var unixData = JSON.stringify({" unix": timestampData, " natural": unixNumberToDate});  
+  }
+   else if (isNaN(unixToDate) && dateToUnix) {
+    var unixData = JSON.stringify({" unix": dateToUnix, " natural": timestampData});  
+    } else {
+    var unixData = JSON.stringify({" unix": "null", " natural": "null"});   
+    }
+ /*** validation done ****/
+  res.send(unixData);
+  
+})
 
 // Respond not found to all the wrong routes
 app.use(function(req, res, next){
